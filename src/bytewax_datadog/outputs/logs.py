@@ -34,6 +34,21 @@ class LogSinkPartition(StatelessSinkPartition[CreateLogEntry]):
         self._default_source = default_source
         self._extra_tags = ",".join(extra_tags)
 
+    def _get_log_item(self, item: CreateLogEntry) -> HTTPLogItem:
+        log_item = HTTPLogItem(
+            ddtags=",".join(item.tags),
+            hostname=item.hostname,
+            service=item.service,
+            message=item.message,
+        )
+
+        if item.source is not None:
+            log_item.ddsource = item.source
+        elif self._default_source is not None:
+            log_item.ddsource = item.source
+
+        return log_item
+
     def _chunk_batch(self, items: Sequence[CreateLogEntry], size: int):
         """Prepare batch for sending to Datadog.
 
@@ -43,20 +58,7 @@ class LogSinkPartition(StatelessSinkPartition[CreateLogEntry]):
         submitted at once.
         """
         for i in range(0, len(items), size):
-            yield HTTPLog(
-                [
-                    HTTPLogItem(
-                        ddsource=self._default_source
-                        if item.source is None
-                        else item.source,
-                        ddtags=",".join(item.tags),
-                        hostname=item.hostname,
-                        service=item.service,
-                        message=item.message,
-                    )
-                    for item in items[i : i + size]
-                ]
-            )
+            yield HTTPLog([self._get_log_item(item) for item in items[i : i + size]])
 
     def write_batch(self, items: Sequence[CreateLogEntry]):
         for batch_body in self._chunk_batch(items, MAX_CHUNK_LENGTH):
