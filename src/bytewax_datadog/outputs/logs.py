@@ -27,7 +27,7 @@ class LogSinkPartition(StatelessSinkPartition[CreateLogEntry]):
     def __init__(
         self,
         client: ApiClient,
-        default_source: str,
+        default_source: str | None = None,
         extra_tags: Sequence[str] = tuple(),
     ):
         self._logs_client = LogsApi(client)
