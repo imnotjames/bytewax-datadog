@@ -1,0 +1,57 @@
+[project]
+name = "bytewax-datadog"
+version = "0.0.0"
+description = "Datadog connectors for Bytewax"
+readme = "README.md"
+authors = [
+    { name = "James Ward", email = "james@notjam.es" }
+]
+license = "MIT"
+keywords = [ "bytewax", "datadog" ]
+requires-python = ">=3.12"
+dependencies = [
+    "bytewax>=0.21.1",
+    "datadog-api-client>=2.33.1",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.396",
+    "pytest>=8.3.5",
+    "ruff>=0.11.0",
+]
+
+[project.urls]
+Repository = "https://github.com/imnotjames/bytewax-datadog.git"
+Issues = "https://github.com/imnotjames/bytewax-datadog/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff.lint]
+preview = true
+select = [
+    "E4",       # Import rules
+    "E7",       # Statement rules
+    "E9",       # Runtime rules
+    "F",        # All Pyflakes rules
+    "B006",     # mutable-argument-default: Do not use mutable data structures for argument defaults
+    "B008",     # function-call-in-default-argument: Do not perform function call {name} in argument defaults;
+    "PIE790",   # unnecessary-placeholder: Unnecessary pass statement
+    "S303",     # suspicious-insecure-hash-usage: Use of insecure MD2, MD4, MD5, or SHA1 hash function
+    "S324",     # hashlib-insecure-hash-function: Probable use of insecure hash functions in {library}: {string}
+    "I",        # All isort rules
+    "D",        # All pydocstyle rules
+]
+ignore = [
+    "D1",       # Don't enforce existence of docstrings
+]
+extend-unsafe-fixes = ["F401"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["tests"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
