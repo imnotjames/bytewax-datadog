@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Self, Sequence
+from typing import NamedTuple, Self, Sequence
 
 from bytewax.outputs import DynamicSink, StatelessSinkPartition
 from datadog_api_client import ApiClient, Configuration
