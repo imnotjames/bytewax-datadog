@@ -1,6 +1,6 @@
 [project]
 name = "bytewax-datadog"
-version = "0.0.0"
+version = "0.1.0"
 description = "Datadog connectors for Bytewax"
 readme = "README.md"
 authors = [
