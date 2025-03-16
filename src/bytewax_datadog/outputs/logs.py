@@ -20,6 +20,9 @@ class CreateLogEntry(NamedTuple):
     tags: Sequence[str] = tuple()
 
 
+MAX_CHUNK_LENGTH = 500
+
+
 class LogSinkPartition(StatelessSinkPartition[CreateLogEntry]):
     def __init__(
         self,
@@ -31,27 +34,37 @@ class LogSinkPartition(StatelessSinkPartition[CreateLogEntry]):
         self._default_source = default_source
         self._extra_tags = ",".join(extra_tags)
 
-    def write_batch(self, items: List[CreateLogEntry]):
-        # TODO: Batch into 500-1000
+    def _chunk_batch(self, items: Sequence[CreateLogEntry], size: int):
+        """Prepare batch for sending to Datadog.
 
-        batch_body = HTTPLog(
-            [
-                HTTPLogItem(
-                    ddsource=self._default_source if item.source is None else item.source,
-                    ddtags=",".join(item.tags),
-                    hostname=item.hostname,
-                    service=item.service,
-                    message=item.message,
-                )
-                for item in items
-            ]
-        )
+        This attempts to ensure that the data we are sending
+        to datadog is the appropriate size.  Datadog's log ingestion
+        endpoint has a limit on the number of logs that may be
+        submitted at once.
+        """
+        for i in range(0, len(items), size):
+            yield HTTPLog(
+                [
+                    HTTPLogItem(
+                        ddsource=self._default_source
+                        if item.source is None
+                        else item.source,
+                        ddtags=",".join(item.tags),
+                        hostname=item.hostname,
+                        service=item.service,
+                        message=item.message,
+                    )
+                    for item in items[i : i + size]
+                ]
+            )
 
-        self._logs_client.submit_log(
-            body=batch_body,
-            content_encoding=ContentEncoding.GZIP,
-            ddtags=self._extra_tags,
-        )
+    def write_batch(self, items: Sequence[CreateLogEntry]):
+        for batch_body in self._chunk_batch(items, MAX_CHUNK_LENGTH):
+            self._logs_client.submit_log(
+                body=batch_body,
+                content_encoding=ContentEncoding.GZIP,
+                ddtags=self._extra_tags,
+            )
 
 
 class LogSink(DynamicSink[CreateLogEntry]):
