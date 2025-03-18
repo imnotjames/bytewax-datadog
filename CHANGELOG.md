@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/imnotjames/bytewax-datadog/compare/v0.1.0...v0.1.1) (2025-03-18)
+
+
+### Bug Fixes
+
+* corrected typing for log attributes item ([dbca2a6](https://github.com/imnotjames/bytewax-datadog/commit/dbca2a62c19c495d6d24982d695dce14a37f66be))
+
 ## 0.1.0 (2025-03-16)
 
 
