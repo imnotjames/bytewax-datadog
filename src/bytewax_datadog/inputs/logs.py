@@ -10,7 +10,7 @@ from datadog_api_client.v1.models import LogsListRequest, LogsListRequestTime, L
 DEFAULT_POLL_INTERVAL = 10
 
 
-type LogAttributesItem = Union[
+type LogSourceRecordAttributesItem = Union[
     bool,
     date,
     datetime,
@@ -20,16 +20,16 @@ type LogAttributesItem = Union[
     list,
     str,
     UUID,
-    "LogAttributes",
-    Sequence["LogAttributesItem"],
+    "LogSourceRecordAttributesItem",
+    Sequence["LogSourceRecordAttributesItem"],
     None,
 ]
 
 
-type LogAttributes = Mapping[str, LogAttributesItem]
+type LogSourceRecordAttributes = Mapping[str, LogSourceRecordAttributesItem]
 
 
-class LogEntry(NamedTuple):
+class LogSourceRecord(NamedTuple):
     id: str
 
     timestamp: datetime
@@ -40,12 +40,12 @@ class LogEntry(NamedTuple):
 
     message: str
 
-    attributes: LogAttributesItem
+    attributes: LogSourceRecordAttributes
 
     tags: Sequence[str]
 
 
-class LogSourcePartition(StatefulSourcePartition[LogEntry, str | None]):
+class LogSourcePartition(StatefulSourcePartition[LogSourceRecord, str | None]):
     def __init__(
         self,
         client: ApiClient,
@@ -89,7 +89,7 @@ class LogSourcePartition(StatefulSourcePartition[LogEntry, str | None]):
         self._cursor = response.logs[0]["id"]
         return self._cursor
 
-    def next_batch(self) -> Iterable[LogEntry]:
+    def next_batch(self) -> Iterable[LogSourceRecord]:
         """Retrieves the next batch of records from the datadog API.
 
         This function will retrieve the next batch of records after the cursor
@@ -120,7 +120,7 @@ class LogSourcePartition(StatefulSourcePartition[LogEntry, str | None]):
             has_seen_new_records = True
 
             self._cursor = record["id"]
-            yield LogEntry(
+            yield LogSourceRecord(
                 id=record["id"],
                 hostname=record["content"]["host"],
                 service=record["content"]["service"],
@@ -145,7 +145,7 @@ class LogSourcePartition(StatefulSourcePartition[LogEntry, str | None]):
         return self._cursor
 
 
-class LogSource(FixedPartitionedSource[LogEntry, str | None]):
+class LogSource(FixedPartitionedSource[LogSourceRecord, str | None]):
     def __init__(
         self,
         client: ApiClient,
@@ -182,7 +182,7 @@ class LogSource(FixedPartitionedSource[LogEntry, str | None]):
 
 
 __all__ = (
-    "LogEntry",
+    "LogSourceRecord",
     "LogSourcePartition",
     "LogSource",
 )

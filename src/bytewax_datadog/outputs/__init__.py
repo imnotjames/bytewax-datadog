@@ -1,6 +1,6 @@
-from .logs import CreateLogEntry, LogSink
+from .logs import LogSink, LogSinkRecord
 
 __all__ = (
     "LogSink",
-    "CreateLogEntry",
+    "LogSinkRecord",
 )

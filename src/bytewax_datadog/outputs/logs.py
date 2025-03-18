@@ -8,7 +8,7 @@ from datadog_api_client.v2.model.http_log import HTTPLog
 from datadog_api_client.v2.model.http_log_item import HTTPLogItem
 
 
-class CreateLogEntry(NamedTuple):
+class LogSinkRecord(NamedTuple):
     hostname: str
 
     service: str
@@ -23,7 +23,7 @@ class CreateLogEntry(NamedTuple):
 MAX_CHUNK_LENGTH = 500
 
 
-class LogSinkPartition(StatelessSinkPartition[CreateLogEntry]):
+class LogSinkPartition(StatelessSinkPartition[LogSinkRecord]):
     def __init__(
         self,
         client: ApiClient,
@@ -34,7 +34,7 @@ class LogSinkPartition(StatelessSinkPartition[CreateLogEntry]):
         self._default_source = default_source
         self._extra_tags = ",".join(extra_tags)
 
-    def _get_log_item(self, item: CreateLogEntry) -> HTTPLogItem:
+    def _get_log_item(self, item: LogSinkRecord) -> HTTPLogItem:
         log_item = HTTPLogItem(
             ddtags=",".join(item.tags),
             hostname=item.hostname,
@@ -49,7 +49,7 @@ class LogSinkPartition(StatelessSinkPartition[CreateLogEntry]):
 
         return log_item
 
-    def _chunk_batch(self, items: Sequence[CreateLogEntry], size: int):
+    def _chunk_batch(self, items: Sequence[LogSinkRecord], size: int):
         """Prepare batch for sending to Datadog.
 
         This attempts to ensure that the data we are sending
@@ -60,7 +60,7 @@ class LogSinkPartition(StatelessSinkPartition[CreateLogEntry]):
         for i in range(0, len(items), size):
             yield HTTPLog([self._get_log_item(item) for item in items[i : i + size]])
 
-    def write_batch(self, items: Sequence[CreateLogEntry]):
+    def write_batch(self, items: Sequence[LogSinkRecord]):
         for batch_body in self._chunk_batch(items, MAX_CHUNK_LENGTH):
             self._logs_client.submit_log(
                 body=batch_body,
@@ -69,7 +69,7 @@ class LogSinkPartition(StatelessSinkPartition[CreateLogEntry]):
             )
 
 
-class LogSink(DynamicSink[CreateLogEntry]):
+class LogSink(DynamicSink[LogSinkRecord]):
     def __init__(
         self,
         client: ApiClient,
@@ -103,7 +103,7 @@ class LogSink(DynamicSink[CreateLogEntry]):
 
 
 __all__ = (
-    "CreateLogEntry",
+    "LogSinkRecord",
     "LogSinkPartition",
     "LogSink",
 )

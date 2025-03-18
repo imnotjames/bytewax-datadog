@@ -1,6 +1,6 @@
-from .logs import LogEntry, LogSource
+from .logs import LogSource, LogSourceRecord
 
 __all__ = (
     "LogSource",
-    "LogEntry",
+    "LogSourceRecord",
 )

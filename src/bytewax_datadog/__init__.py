@@ -1,15 +1,15 @@
 from .inputs import (
-    LogEntry,
     LogSource,
+    LogSourceRecord,
 )
 from .outputs import (
-    CreateLogEntry,
     LogSink,
+    LogSinkRecord,
 )
 
 __all__ = (
-    "LogEntry",
     "LogSource",
-    "CreateLogEntry",
+    "LogSourceRecord",
     "LogSink",
+    "LogSinkRecord",
 )
