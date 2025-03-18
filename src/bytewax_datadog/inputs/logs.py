@@ -62,33 +62,6 @@ class LogSourcePartition(StatefulSourcePartition[LogSourceRecord, str | None]):
         self._logs_client = LogsApi(client)
         self._next_awake: Optional[datetime] = None
 
-    def _get_start_at(self) -> str | None:
-        """Helper to find where to start the cursor.
-
-        This source starts at whatever "now" is by default
-        but to do that we have to figure out the log record for "now"
-        to start with if we haven't seen any other log records.
-        """
-        if self._cursor is not None:
-            return self._cursor
-
-        request = LogsListRequest(
-            query=self._filter_query,
-            sort=LogsSort.TIME_DESCENDING,
-            time=LogsListRequestTime(
-                _from=datetime.fromtimestamp(0, UTC), to=datetime.now(UTC)
-            ),
-            limit=1,
-        )
-
-        response = self._logs_client.list_logs(request)
-
-        if len(response.logs) == 0:
-            return None
-
-        self._cursor = response.logs[0]["id"]
-        return self._cursor
-
     def next_batch(self) -> Iterable[LogSourceRecord]:
         """Retrieves the next batch of records from the datadog API.
 
@@ -106,7 +79,7 @@ class LogSourcePartition(StatefulSourcePartition[LogSourceRecord, str | None]):
             ),
         )
 
-        start_at = self._get_start_at()
+        start_at = self.snapshot()
         if start_at is not None:
             request.start_at = start_at
 
@@ -142,6 +115,30 @@ class LogSourcePartition(StatefulSourcePartition[LogSourceRecord, str | None]):
         return self._next_awake
 
     def snapshot(self) -> str | None:
+        """Get the current position we should be starting from.
+
+        This source starts at whatever "now" is by default
+        but to do that we have to figure out the log record for "now"
+        to start with if we haven't seen any other log records.
+        """
+        if self._cursor is not None:
+            return self._cursor
+
+        request = LogsListRequest(
+            query=self._filter_query,
+            sort=LogsSort.TIME_DESCENDING,
+            time=LogsListRequestTime(
+                _from=datetime.fromtimestamp(0, UTC), to=datetime.now(UTC)
+            ),
+            limit=1,
+        )
+
+        response = self._logs_client.list_logs(request)
+
+        if len(response.logs) == 0:
+            return None
+
+        self._cursor = response.logs[0]["id"]
         return self._cursor
 
 
