@@ -20,7 +20,7 @@ type LogSourceRecordAttributesItem = Union[
     list,
     str,
     UUID,
-    "LogSourceRecordAttributesItem",
+    "LogSourceRecordAttributes",
     Sequence["LogSourceRecordAttributesItem"],
     None,
 ]
